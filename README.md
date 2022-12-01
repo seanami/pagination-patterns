@@ -48,9 +48,38 @@ enum UsersOrder {
 
 ### Response fields
 
-TODO
-- Pagination state
-- Limited history
+How does the server return data and pagination state info to clients? I've found that it's helpful to have a part of the response be dedicated to explicit pagination data (which helps to simplify client implemtation).
+
+```protobuf
+message ListUsersResponse {
+  // One or more user records that fit the request criteria.
+  repeated User users = 1;
+  
+  // Pagination data for the client to use in making subsequent requests.
+  Pagination pagination = 2;
+}
+
+message Pagination {
+  // Whether there are more items or not (and if not, why not.)
+  PaginationState pagination_state = 1;
+  
+  // The value of the ordered field for the last record in the set. It can be provided directly to `before/after` fields.
+  // (This means the client doesn't have to know how to find it within records.)
+  string last = 2;
+}
+
+enum PaginationState {
+  // There are more items / we're not certain we have reached the end yet.
+  CONTINUE = 0;
+  
+  // There are no more items to load.
+  END = 1;
+  
+  // There are more items, but they are out of range for the user.
+  // (This can be used if a "free" version of the service only allows 30 days of history, for instance.)
+  LIMITED = 2;
+}
+```
 
 ## Client design considerations
 
